@@ -1,0 +1,106 @@
+Project Title: TeleGuard Alert System
+1. Executive Summary
+TeleGuard is a multi-tenant web application designed to allow users to connect their personal Telegram accounts and configure automated alerts. Users can set specific "triggers" (keywords, specific senders) that, when detected in their Telegram chats, instantly send a notification via Email or a dedicated Telegram Bot. The platform is gated by a referral system to control access.
+2. Tech Stack
+Backend: FastAPI (Python) - High-performance async framework.
+Frontend: Jinja2 Templates + HTMX (recommended for dynamic interactions without full React overhead) + TailwindCSS.
+Database & Auth: Supabase (PostgreSQL).
+Telegram Client: Telethon or Pyrogram (Python libraries for interacting with Telegram MTProto).
+Deployment: Vercel (Web/API) + Note: Persistent Worker required for listeners (e.g., Railway/Heroku/VPS).
+3. Key Features & Functional Requirements
+A. User Authentication & Access Control
+Referral-Gated Registration:
+New users must provide a valid Referral Code to register.
+Registration requires Email (with verification link) and Password.
+Login: Standard Email/Password login.
+Supabase Integration: utilized for managing user sessions and storing encrypted Telegram session strings.
+B. Telegram Account Linking (The "Pairing System")
+Connect Account:
+User inputs their phone number to receive an OTP.
+Alternative: Display a QR Code for the user to scan via their mobile Telegram app.
+Session Storage:
+The app generates a session string (e.g., Telethon StringSession) and securely stores it in Supabase linked to the user's ID.
+Supports multiple distinct sessions for different users (Multi-tenant).
+C. Alert Configuration Engine
+Users can create "Alert Rules" with the following logic:
+Source: Select specific Chat, Group, Channel, or "All Incoming".
+Trigger Condition:
+Keyword Match: Message contains specific text (e.g., "Breaking APIs").
+Sender Match: Message is from a specific username/ID (e.g., @adidokploybot).
+Action:
+Send Email (via SMTP/SendGrid).
+Send Telegram Message (via the platform's Notification Bot).
+D. Notification Dispatcher
+Email: Sends an alert to the user's registered email.
+Bot Message: The user must start a chat with the platform's "Alert Bot" once. The system then forwards alerts to them through this bot.
+4. System Architecture & Methods
+Database Schema (Supabase)
+users: id, email, password_hash, referral_code_used, created_at.
+referral_codes: code, created_by_user_id, is_active, max_uses.
+telegram_sessions: user_id, session_string, phone_number, is_active.
+alerts: id, user_id, source_id (chat_id), keyword_filter, sender_filter, notify_email (bool), notify_bot (bool).
+The "Listener" Problem & Solution
+The Challenge: Vercel is a "Serverless" platform. It freezes code when not in use. It cannot keep a Telegram client open 24/7 to listen for "Breaking APIs" messages.
+The Solution: You need a Hybrid Architecture.
+Vercel: Hosts the UI (FastAPI + Jinja2) and the Database API.
+Worker Node (VPS/Railway): A separate Python script that runs continuously. It pulls active sessions from Supabase, connects to Telegram, and listens for events.
+Workflow Logic
+Registration: User enters Email + Ref Code -> Backend validates Code -> Creates User in Supabase.
+Linking: User requests QR -> Backend generates QR via Telethon -> User Scans -> Backend saves Session String.
+Monitoring (The Worker):
+Load all active Session Strings.
+For each session, attach event listeners (@client.on(events.NewMessage)).
+On new message: Check against User's alerts table.
+If Match: Trigger Notification Function.
+5. Project Tasks & Roadmap
+Phase 1: Setup & Auth (Backend + DB)
+[ ] Initialize FastAPI project structure.
+[ ] Setup Supabase project (Tables: users, referral_codes, alerts).
+[ ] Implement Signup Endpoint (Verify Referral Code -> Create User).
+[ ] Implement Login Endpoint (JWT Token generation).
+[ ] Create Email Verification logic.
+Phase 2: Frontend (Jinja2)
+[ ] Create base.html layout.
+[ ] Build Landing Page (Login/Register forms).
+[ ] Build Dashboard (List active alerts, "Connect Telegram" button).
+[ ] Build Alert Modal (Form to select triggers and actions).
+Phase 3: Telegram Integration (Core)
+[ ] Implement "Add Account" flow (Phone number input -> Request OTP -> Submit OTP).
+[ ] Implement "QR Code" flow (Generate QR -> Display to user -> Poll for login success).
+[ ] Encrypt and save Session String to Supabase.
+Phase 4: The Listener Worker (Background Process)
+[ ] Create a standalone script worker.py.
+[ ] Logic to spawn a Telethon client for every active user in DB.
+[ ] Implement the filtering logic (Regex for keywords, ID match for users).
+[ ] Implement the Dispatcher (Send Email / Send Bot Message).
+Phase 5: Deployment
+[ ] Deploy FastAPI Web App to Vercel (vercel.json config).
+[ ] Deploy worker.py to a persistent host (e.g., Railway or a cheap VPS).
+[ ] Connect domain and test end-to-end flow.
+6. Technical Brief for Developer
+API Endpoints (FastAPI):
+POST /auth/register: Validate referral, create user.
+POST /telegram/connect: Initiate login (returns QR or asks for phone).
+POST /telegram/verify: Submit OTP.
+POST /alerts/create: Save new alert rule to DB.
+GET /dashboard: Render Jinja2 template with user stats.
+Dependencies (requirements.txt):
+
+Plaintext
+
+
+fastapi
+uvicorn
+jinja2
+supabase
+python-multipart
+telethon (or pyrogram)
+qrcode
+python-dotenv
+email-validator
+
+
+Deployment Note:
+Ensure the APP_ID and APP_HASH are stored as Environment Variables in Vercel and the Worker environment, never hardcoded in the repository.
+Next Step
+Would you like me to generate the FastAPI directory structure or the SQL schema code for Supabase to get you started immediately?

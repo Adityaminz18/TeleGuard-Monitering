@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+python-dotenv
+pydantic-settings
+supabase
+telethon
+qrcode
+email-validator
+httpx
