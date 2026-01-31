@@ -4,8 +4,14 @@ jinja2
 python-multipart
 python-dotenv
 pydantic-settings
-supabase
+# supabase  <- Removing Supabase
+sqlmodel   # <- Adding SQLModel
+asyncpg    # <- Adding AsyncPG
 telethon
 qrcode
 email-validator
 httpx
+python-jose
+passlib[bcrypt]
+greenlet
+slowapi

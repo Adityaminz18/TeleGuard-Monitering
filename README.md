@@ -63,21 +63,22 @@ Vercel's serverless environment puts functions to sleep when idle, making it uns
 ## Roadmap
 
 ### Phase 1: Setup & Auth
-- [ ] FastAPI structure & Supabase init.
-- [ ] User Registration (Referral check) & Login.
+- [x] FastAPI structure & Supabase init.
+- [x] User Registration (Referral check) & Login.
 
 ### Phase 2: Frontend
-- [ ] Landing Page & Dashboard with Jinja2 + Tailwind.
-- [ ] Alert Management UI.
+- [x] Landing Page with Jinja2 + Tailwind.
+- [x] Dashboard UI.
+- [x] Alert Management UI.
 
 ### Phase 3: Telegram Integration
-- [ ] Account Linking (OTP & QR flows).
-- [ ] Session string encryption & storage.
+- [x] Account Linking (OTP & QR flows).
+- [x] Session string encryption & storage.
 
 ### Phase 4: The Worker
-- [ ] Standalone listener script `worker.py`.
-- [ ] Telethon client pooling.
-- [ ] Event filtering & Dispatcher logic.
+- [x] Standalone listener script `worker.py`.
+- [x] Telethon client pooling.
+- [x] Event filtering & Dispatcher logic.
 
 ### Phase 5: Deployment
 - [ ] Vercel deployment for Web.

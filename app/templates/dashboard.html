@@ -1,0 +1,1055 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TeleGuard{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="flex h-[calc(100vh-64px)] overflow-hidden">
+    <!-- Sidebar -->
+    <aside
+        class="w-64 bg-gray-900/50 backdrop-blur-md border-r border-gray-800 flex-shrink-0 flex flex-col transition-all duration-300 transform md:translate-x-0 -translate-x-full md:static absolute inset-y-0 left-0 z-40"
+        id="sidebar">
+        <div class="p-6">
+            <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Menu</h2>
+            <nav class="space-y-1">
+                <button onclick="showSection('overview')" id="nav-overview"
+                    class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                        </path>
+                    </svg>
+                    Overview
+                </button>
+                <button onclick="showSection('listeners')" id="nav-listeners"
+                    class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                        </path>
+                    </svg>
+                    Listeners
+                </button>
+                <button onclick="showSection('connections')" id="nav-connections"
+                    class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                        </path>
+                    </svg>
+                    Connections
+                </button>
+                <button onclick="showSection('settings')" id="nav-settings"
+                    class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Settings
+                </button>
+                <button onclick="showSection('users')" id="nav-users"
+                    class="hidden w-full flex items-center px-4 py-3 text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    Users
+                </button>
+            </nav>
+        </div>
+        <!-- Sidebar Footer -->
+        <div class="mt-auto p-4 border-t border-gray-800">
+            <div class="flex items-center px-4 py-2 mb-3">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs"
+                        id="user-avatar">
+                        U
+                    </div>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-white truncate w-32" id="sidebar-email">Loading...</p>
+                    <p class="text-xs text-gray-500">Free Plan</p>
+                </div>
+            </div>
+            <button onclick="logout()"
+                class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white text-xs font-medium rounded-lg transition-colors border border-gray-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                    </path>
+                </svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-gray-900 relative">
+        <!-- Mobile Sidebar Toggle -->
+        <div
+            class="md:hidden p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/95 backdrop-blur sticky top-0 z-30">
+            <h1 class="text-lg font-bold text-white">TeleGuard</h1>
+            <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')"
+                class="text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <!-- Loading State -->
+            <div id="loading" class="text-center text-gray-400 py-20">
+                <svg class="animate-spin h-8 w-8 text-indigo-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                Loading dashboard...
+            </div>
+
+            <!-- Dashboard Sections (Hidden by default) -->
+            <div id="dashboard-content" class="hidden">
+
+                <!-- SECTION: OVERVIEW -->
+                <div id="section-overview" class="space-y-6">
+                    <div class="flex justify-between items-end">
+                        <h1 class="text-2xl font-bold text-white">Dashboard Overview</h1>
+                        <span class="text-xs text-gray-500">Live Updates</span>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <!-- Total Listeners -->
+                        <div
+                            class="glass p-5 rounded-xl border border-gray-700/50 bg-gradient-to-br from-gray-800/50 to-gray-900/50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active
+                                        Listeners</p>
+                                    <h3 class="mt-2 text-3xl font-bold text-white" id="stat-total-alerts">0</h3>
+                                </div>
+                                <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a1 1 0 01-3 3z">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Triggers -->
+                        <div
+                            class="glass p-5 rounded-xl border border-gray-700/50 bg-gradient-to-br from-gray-800/50 to-gray-900/50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Triggers
+                                    </p>
+                                    <h3 class="mt-2 text-3xl font-bold text-indigo-400" id="stat-total-triggers">0</h3>
+                                </div>
+                                <div class="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Users Count (Hidden by default) -->
+                        <div class="glass p-5 rounded-xl border border-gray-700/50 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hidden"
+                            id="card-users-count">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Users
+                                    </p>
+                                    <h3 class="mt-2 text-3xl font-bold text-green-400" id="stat-total-users">-</h3>
+                                </div>
+                                <div class="p-2 bg-green-500/10 rounded-lg text-green-400">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connection Status -->
+                        <div
+                            class="glass p-5 rounded-xl border border-gray-700/50 bg-gradient-to-br from-gray-800/50 to-gray-900/50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Worker Status
+                                    </p>
+                                    <div class="mt-2 flex items-center" id="stat-connection-overview">
+                                        <span class="flex h-3 w-3 relative mr-2">
+                                            <span
+                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-3 w-3 bg-gray-500"></span>
+                                        </span>
+                                        <span class="text-gray-300 font-medium text-lg"
+                                            id="stat-connection">Unknown</span>
+                                    </div>
+                                </div>
+                                <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Main Chart -->
+                        <div class="lg:col-span-2 glass rounded-xl p-6 border border-gray-700/50">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold text-white">Alert Activity</h3>
+                                <select
+                                    class="bg-gray-800 text-xs text-gray-400 border-none rounded px-2 py-1 focus:ring-0">
+                                    <option>Last 7 Days</option>
+                                    <option>Last 30 Days</option>
+                                </select>
+                            </div>
+                            <div class="h-64 relative w-full">
+                                <canvas id="activityChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity Feed -->
+                        <div class="glass rounded-xl p-6 border border-gray-700/50 flex flex-col">
+                            <h3 class="text-lg font-bold text-white mb-4">Recent Triggers</h3>
+                            <div class="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar"
+                                id="recent-triggers-list" style="max-height: 250px;">
+                                <div class="text-gray-500 text-sm italic">Loading triggers...</div>
+                            </div>
+                            <div class="mt-auto pt-4 border-t border-gray-800 text-center">
+                                <button onclick="showSection('listeners')"
+                                    class="text-xs text-indigo-400 hover:text-white transition-colors">View All
+                                    Logs</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: LISTENERS -->
+                <div id="section-listeners" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">Active Listeners</h1>
+                            <p class="text-gray-400 text-sm mt-1">Manage your monitoring rules and alerts.</p>
+                        </div>
+                        <button onclick="openModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors shadow-lg shadow-indigo-500/20 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            New Listener
+                        </button>
+                    </div>
+
+                    <div id="alerts-list" class="space-y-4">
+                        <!-- Alerts injected via JS -->
+                    </div>
+                    <div id="no-alerts-msg"
+                        class="hidden text-center py-12 rounded-xl border border-dashed border-gray-700">
+                        <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                            </path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-300">No listeners active</h3>
+                        <p class="mt-1 text-sm text-gray-500">Get started by creating a new alert rule.</p>
+                    </div>
+                </div>
+
+                <!-- SECTION: CONNECTIONS -->
+                <div id="section-connections" class="hidden space-y-6">
+                    <h1 class="text-2xl font-bold text-white">Telegram Connection</h1>
+                    <div class="glass rounded-xl p-8 max-w-2xl border border-gray-700/50">
+                        <!-- Content moved from old layout -->
+                        <div id="telegram-disconnected" class="hidden">
+                            <div class="text-center mb-8">
+                                <div
+                                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 text-gray-400 mb-4">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                                    </svg>
+                                </div>
+                                <h2 class="text-xl font-semibold text-white">Connect Telegram</h2>
+                                <p class="text-gray-400 mt-2">Link your account to enable monitoring and bot alerts.
+                                </p>
+                            </div>
+
+                            <form id="phone-form" class="space-y-4 max-w-md mx-auto">
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">Phone Number</label>
+                                    <div class="relative">
+                                        <input type="text" id="phone_number" placeholder="+1234567890"
+                                            class="block w-full pl-4 pr-10 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">Use international format (e.g. +1...)</p>
+                                </div>
+                                <button type="submit"
+                                    class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors shadow-lg shadow-indigo-500/30">
+                                    Send Verification Code
+                                </button>
+                            </form>
+
+                            <form id="otp-form" class="hidden space-y-4 max-w-md mx-auto">
+                                <input type="hidden" id="phone_hash">
+                                <input type="hidden" id="session_string">
+                                <div
+                                    class="bg-green-900/20 border border-green-500/20 rounded-lg p-3 text-sm text-green-400 text-center">
+                                    Code sent! Check your Telegram app.
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400">Verification Code</label>
+                                    <input type="text" id="otp_code"
+                                        class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400">2FA Password (Optional)</label>
+                                    <input type="password" id="password_2fa"
+                                        class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <button type="submit"
+                                    class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-lg shadow-green-500/30">
+                                    Verify & Connect
+                                </button>
+                            </form>
+                            <div id="tg-error"
+                                class="text-red-400 text-sm mt-4 hidden text-center bg-red-900/20 p-2 rounded border border-red-500/20">
+                            </div>
+                        </div>
+
+                        <div id="telegram-connected" class="hidden text-center py-8">
+                            <div
+                                class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-900/30 text-green-400 mb-6 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">
+                                <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Connected</h3>
+                            <p class="text-gray-400">Active session for <span id="connected-phone"
+                                    class="font-mono text-indigo-400 bg-indigo-900/20 px-2 py-0.5 rounded ml-1"></span>
+                            </p>
+
+                            <div class="mt-8 flex justify-center">
+                                <button onclick="loadDialogs(); showSection('listeners'); openModal()"
+                                    class="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">Test
+                                    Connection (Load Chats)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: USERS (ADMIN ONLY) -->
+                <div id="section-users" class="hidden space-y-6">
+                    <h1 class="text-2xl font-bold text-white">User Management</h1>
+
+                    <div class="glass rounded-xl border border-gray-700/50 overflow-hidden">
+                        <div
+                            class="px-6 py-4 border-b border-gray-700/50 flex justify-between items-center bg-gray-800/30">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider">Registered Users
+                            </h3>
+                            <button onclick="loadUsers()" class="text-xs text-indigo-400 hover:text-white">Refresh
+                                List</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-700">
+                                <thead class="bg-gray-800/50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            User</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            Role</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            Status</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            Telegram</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-transparent divide-y divide-gray-700" id="users-table-body">
+                                    <!-- Rows injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="users-loading" class="text-center py-8 text-gray-500 text-sm hidden">Loading
+                            users...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: SETTINGS -->
+                <div id="section-settings" class="hidden space-y-6">
+                    <h1 class="text-2xl font-bold text-white">Settings</h1>
+
+                    <!-- Personal Information -->
+                    <div class="glass rounded-xl p-6 border border-gray-700/50 max-w-xl">
+                        <h2 class="text-lg font-semibold text-white mb-4">Personal Information</h2>
+                        <form id="personal-info-form" class="space-y-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 uppercase tracking-widest mb-1">Full
+                                    Name</label>
+                                <input type="text" id="full_name" placeholder="Enter your name"
+                                    class="block w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 uppercase tracking-widest mb-1">Email
+                                    Address</label>
+                                <div class="text-gray-400 font-mono text-sm bg-gray-800/50 px-3 py-2 rounded border border-gray-800"
+                                    id="settings-email">loading...</div>
+                            </div>
+                            <button type="submit"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Save Profile
+                            </button>
+                        </form>
+                    </div> <!-- Bot Configuration (Re-added) -->
+                    <div class="glass rounded-xl p-6 border border-gray-700/50 max-w-xl">
+                        <h2 class="text-lg font-semibold text-white mb-4">Bot Configuration</h2>
+                        <div class="space-y-4">
+                            <p class="text-sm text-gray-400">
+                                To receive alerts via the bot, you must start a chat with
+                                <a href="https://t.me/TeleGuard_Bot" target="_blank"
+                                    class="text-indigo-400 hover:text-indigo-300">@TeleGuard_Bot</a>.
+                            </p>
+
+                            <form id="bot-settings-form" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase tracking-widest mb-1">Target
+                                        Chat ID</label>
+                                    <input type="text" id="bot_chat_id" placeholder="e.g. 123456789 or -100..."
+                                        class="block w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-sm">
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Enter your Telegram User ID or a Group ID. Leave empty to auto-detect from
+                                        connected session.
+                                    </p>
+                                </div>
+                                <button type="submit"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Save Configuration
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Create Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true"
+            onclick="closeModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div
+            class="inline-block align-bottom glass rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">Create New Listener</h3>
+                <form id="create-alert-form" class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300">Target Chat / Group (Optional)</label>
+                        <div class="flex space-x-2 mt-1">
+                            <select id="source_id"
+                                class="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <option value="">All Chats (Monitor Everything)</option>
+                            </select>
+                            <button type="button" onclick="loadDialogs()" id="refresh-chats-btn"
+                                class="bg-gray-600 hover:bg-gray-500 px-3 py-2 rounded text-white text-sm"
+                                title="Refresh Chats">
+                                ↻
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Select a specific chat to limit monitoring.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300">Keywords (comma separated)</label>
+                        <input type="text" id="alert_keywords" required placeholder="e.g. urgent, error, api"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                        <p class="text-xs text-gray-500 mt-1">Triggers if ANY of these match.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300">Excluded Keywords</label>
+                        <input type="text" id="alert_excluded" placeholder="e.g. test, debug"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                    </div>
+                    <div class="flex items-center">
+                        <input id="alert_email" type="checkbox" checked
+                            class="h-4 w-4 bg-gray-700 border-gray-600 rounded text-indigo-600 focus:ring-indigo-500">
+                        <label for="alert_email" class="ml-2 block text-sm text-gray-300">Notify via Email</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="alert_bot" type="checkbox"
+                            class="h-4 w-4 bg-gray-700 border-gray-600 rounded text-indigo-600 focus:ring-indigo-500">
+                        <label for="alert_bot" class="ml-2 block text-sm text-gray-300">Notify via Telegram Bot</label>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
+                <button type="button" onclick="submitAlert()"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                    Create
+                </button>
+                <button type="button" onclick="closeModal()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-gray-300 hover:bg-gray-600 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login';
+
+    // ---- Sidebar Navigation ----
+    function showSection(sectionId) {
+        // Hide all sections
+        ['overview', 'listeners', 'connections', 'settings', 'users'].forEach(id => {
+            document.getElementById('section-' + id).classList.add('hidden');
+            // reset nav style
+            const navBtn = document.getElementById('nav-' + id);
+            if (navBtn) {
+                navBtn.classList.remove('bg-indigo-600/10', 'text-indigo-400', 'border', 'border-indigo-500/20');
+                navBtn.classList.add('text-gray-400', 'hover:bg-gray-800/50');
+            }
+        });
+
+        // Show target
+        document.getElementById('section-' + sectionId).classList.remove('hidden');
+
+        // Active Nav Style
+        const activeBtn = document.getElementById('nav-' + sectionId);
+        if (activeBtn) {
+            activeBtn.classList.remove('text-gray-400', 'hover:bg-gray-800/50');
+            activeBtn.classList.add('bg-indigo-600/10', 'text-indigo-400', 'border', 'border-indigo-500/20');
+        }
+    }
+
+    // ---- Profile & Connection Logic (Existing) ----
+    const phoneForm = document.getElementById('phone-form');
+    const otpForm = document.getElementById('otp-form');
+
+    fetch('/api/v1/users/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(user => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+
+            // Populate Sidebar Profile
+            document.getElementById('user-avatar').textContent = user.email.charAt(0).toUpperCase();
+            document.getElementById('sidebar-email').textContent = user.full_name || user.email;
+
+            // Populate Settings
+            document.getElementById('settings-email').textContent = user.email;
+            document.getElementById('full_name').value = user.full_name || '';
+            const botInput = document.getElementById('bot_chat_id');
+            if (botInput) { user.bot_chat_id ? botInput.value = user.bot_chat_id : botInput.value = ''; }
+
+            if (user.telegram_connected) {
+                document.getElementById('telegram-connected').classList.remove('hidden');
+                document.getElementById('telegram-disconnected').classList.add('hidden');
+                document.getElementById('connected-phone').textContent = user.telegram_phone;
+                document.getElementById('stat-connection').textContent = "Connected (" + user.telegram_phone + ")";
+                document.getElementById('stat-connection').className = "mt-2 text-lg font-medium text-green-400";
+            } else {
+                document.getElementById('telegram-connected').classList.add('hidden');
+                document.getElementById('telegram-disconnected').classList.remove('hidden');
+                document.getElementById('stat-connection').textContent = "Disconnected";
+                document.getElementById('stat-connection').className = "mt-2 text-lg font-medium text-red-400";
+            }
+
+            // Default view
+            showSection('overview');
+            loadAlerts();
+            initChart();
+            loadLogs();
+
+            // ADMIN LOGIC
+            if (user.role === 'admin') {
+                // Show Admin Nav
+                document.getElementById('nav-users').classList.remove('hidden');
+                // Show Admin Stats
+                document.getElementById('card-users-count').classList.remove('hidden');
+                loadUsers(); // Pre-load
+            }
+
+        })
+        .catch((err) => {
+            console.error("Dashboard Auth Error:", err);
+            if (localStorage.getItem('token')) {
+                localStorage.removeItem('token');
+            }
+            window.location.href = '/login';
+        });
+
+    // Bot Settings Submit
+    document.getElementById('bot-settings-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const oldText = btn.textContent;
+        btn.disabled = true; btn.textContent = "Saving...";
+
+        const chatIdVal = document.getElementById('bot_chat_id').value.trim();
+        const payload = { bot_chat_id: chatIdVal ? parseInt(chatIdVal) : null };
+
+        try {
+            const res = await fetch('/api/v1/users/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("Failed to save settings");
+            alert("Settings saved successfully!");
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false; btn.textContent = oldText;
+        }
+    });
+
+    // Personal Info Submit
+    document.getElementById('personal-info-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const oldText = btn.textContent;
+        btn.disabled = true; btn.textContent = "Saving...";
+
+        const fullNameVal = document.getElementById('full_name').value.trim();
+        const payload = { full_name: fullNameVal || null };
+
+        try {
+            const res = await fetch('/api/v1/users/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("Failed to save profile");
+            // Update sidebar immediately if name changed
+            const updatedUser = await res.json();
+            if (updatedUser.full_name) {
+                document.getElementById('sidebar-email').textContent = updatedUser.full_name;
+            }
+            alert("Profile updated successfully!");
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false; btn.textContent = oldText;
+        }
+    });
+
+    // Phone Form Submit
+    phoneForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = phoneForm.querySelector('button');
+        btn.disabled = true; btn.textContent = "Sending...";
+        try {
+            const res = await fetch('/api/v1/telegram/request-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ phone_number: document.getElementById('phone_number').value })
+            });
+            if (!res.ok) throw new Error((await res.json()).detail);
+            const data = await res.json();
+            document.getElementById('phone_hash').value = data.phone_code_hash;
+            document.getElementById('session_string').value = data.session_string;
+            phoneForm.classList.add('hidden');
+            otpForm.classList.remove('hidden');
+        } catch (err) { alert(err.message); btn.disabled = false; btn.textContent = "Send Code"; }
+    });
+
+    // OTP Form Submit
+    otpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = otpForm.querySelector('button');
+        btn.disabled = true; btn.textContent = "Verifying...";
+        try {
+            const res = await fetch('/api/v1/telegram/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({
+                    phone_number: document.getElementById('phone_number').value,
+                    phone_code_hash: document.getElementById('phone_hash').value,
+                    session_string: document.getElementById('session_string').value,
+                    code: document.getElementById('otp_code').value,
+                    password: document.getElementById('password_2fa').value
+                })
+            });
+            if (!res.ok) throw new Error((await res.json()).detail);
+            window.location.reload();
+        } catch (err) { alert(err.message); btn.disabled = false; btn.textContent = "Verify & Connect"; }
+    });
+
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+
+    // ---- Alert Management Logic (New) ----
+
+    function loadAlerts() {
+        fetch('/api/v1/alerts/', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(r => r.json())
+            .then(alerts => {
+                const listObj = document.getElementById('alerts-list');
+                listObj.innerHTML = '';
+
+                // Update Overview Stats
+                document.getElementById('stat-total-alerts').textContent = alerts.length;
+                const totalTriggers = alerts.reduce((sum, a) => sum + (a.trigger_count || 0), 0);
+                document.getElementById('stat-total-triggers').textContent = totalTriggers;
+
+                if (alerts.length === 0) {
+                    document.getElementById('no-alerts-msg').classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('no-alerts-msg').classList.add('hidden');
+                alerts.forEach(alert => {
+                    const el = document.createElement('div');
+                    el.className = 'glass-panel p-5 rounded-xl border border-gray-700/50 hover:border-indigo-500/30 transition-all duration-300 relative group';
+
+                    // Source Badge Logic
+                    let sourceBadge = '';
+                    if (!alert.source_id) {
+                        sourceBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-200 border border-purple-700/50">🌐 All Chats</span>';
+                    } else {
+                        sourceBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-200 border border-blue-700/50">💬 ${alert.source_name || alert.source_id}</span>`;
+                    }
+
+                    // Keywords display
+                    const keywordsHtml = alert.keywords.map(k =>
+                        `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-700 text-gray-300 mr-1">${k}</span>`
+                    ).join('');
+
+                    el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-3 w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    ${sourceBadge}
+                                    ${alert.is_regex ? '<span class="text-xs text-yellow-500 font-mono" title="Regex Mode">.*</span>' : ''}
+                                </div>
+                                <div class="text-xs text-gray-500 font-mono">
+                                    ${new Date(alert.created_at).toLocaleDateString()}
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-gray-400 mb-1 uppercase tracking-wider font-semibold">Keywords</p>
+                                <div class="flex flex-wrap gap-1">
+                                    ${keywordsHtml}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-700/50 mt-2">
+                                <div class="flex space-x-4 text-sm text-gray-400">
+                                    <span class="flex items-center ${alert.notify_email ? 'text-green-400' : 'text-gray-600'}">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                        Email
+                                    </span>
+                                    <span class="flex items-center ${alert.notify_bot ? 'text-blue-400' : 'text-gray-600'}">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        Bot
+                                    </span>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <span class="text-xs font-medium mr-2 text-indigo-300 bg-indigo-900/20 px-2 py-1 rounded">
+                                        ⚡️ ${alert.trigger_count || 0}
+                                    </span>
+                                    <button onclick="deleteAlert('${alert.id}')" class="text-gray-500 hover:text-red-400 transition-colors p-1 rounded hover:bg-red-900/20">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                    listObj.appendChild(el);
+                });
+            });
+    }
+
+    async function submitAlert() {
+        const keywords = document.getElementById('alert_keywords').value.split(',').map(s => s.trim()).filter(Boolean);
+        const excluded = document.getElementById('alert_excluded').value.split(',').map(s => s.trim()).filter(Boolean);
+
+        if (keywords.length === 0) { alert('Please enter at least one keyword'); return; }
+
+        const payload = {
+            keywords: keywords,
+            excluded_keywords: excluded,
+            source_id: document.getElementById('source_id').value || null,
+            source_name: document.getElementById('source_id').selectedOptions[0].text,
+            notify_email: document.getElementById('alert_email').checked,
+            notify_bot: document.getElementById('alert_bot').checked
+        };
+
+        try {
+            const res = await fetch('/api/v1/alerts/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("Failed to create alert");
+            closeModal();
+            loadAlerts();
+            document.getElementById('create-alert-form').reset();
+        } catch (err) { alert(err.message); }
+    }
+
+    async function deleteAlert(id) {
+        if (!confirm('Are you sure you want to delete this listener?')) return;
+        try {
+            await fetch('/api/v1/alerts/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            loadAlerts();
+        } catch (err) { alert('Failed to delete'); }
+    }
+
+    function openModal() {
+        document.getElementById('alert-modal').classList.remove('hidden');
+        loadDialogs();
+    }
+    function closeModal() { document.getElementById('alert-modal').classList.add('hidden'); }
+
+    async function loadDialogs() {
+        const select = document.getElementById('source_id');
+        const btn = document.getElementById('refresh-chats-btn');
+
+        try {
+            if (btn) btn.classList.add('animate-spin');
+
+            const res = await fetch('/api/v1/telegram/dialogs', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+
+            // Keep "All Chats" option
+            select.innerHTML = '<option value="">All Chats (Monitor Everything)</option>';
+
+            data.forEach(chat => {
+                const opt = document.createElement('option');
+                opt.value = chat.id;
+                opt.textContent = `[${chat.type}] ${chat.title}`;
+                select.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Failed to load dialogs", err);
+        } finally {
+            if (btn) btn.classList.remove('animate-spin');
+        }
+    }
+
+    // ---- Admin: Users Logic ----
+    async function loadUsers() {
+        if (localStorage.getItem('role') === 'user') return; // clear fail fast (though UI is hidden)
+
+        const tableBody = document.getElementById('users-table-body');
+        const loader = document.getElementById('users-loading');
+
+        loader.classList.remove('hidden');
+        tableBody.innerHTML = '';
+
+        try {
+            const res = await fetch('/api/v1/users/', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) {
+                if (res.status === 403) return; // Not admin
+                throw new Error('Failed to fetch users');
+            }
+            const users = await res.json();
+
+            // Update Stat
+            const statEl = document.getElementById('stat-total-users');
+            if (statEl) statEl.textContent = users.length;
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                                ${u.email.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-white">${u.full_name || 'No Name'}</div>
+                                <div class="text-sm text-gray-500">${u.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-700 text-gray-300'}">
+                            ${u.role}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.is_verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                            ${u.is_verified ? 'Verified' : 'Pending'}
+                        </span>
+                    </td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                        ${u.telegram_connected ? '<span class="text-blue-400">Connected</span>' : 'No'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-indigo-400 hover:text-indigo-300 ml-2">Edit</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+        } catch (err) {
+            console.error(err);
+        } finally {
+            loader.classList.add('hidden');
+        }
+    }
+
+    // ---- Charts Logic ----
+    let myChart = null;
+
+    function initChart() {
+        const ctx = document.getElementById('activityChart').getContext('2d');
+
+        // Gradient
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+        const data = {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Alerts Triggered',
+                data: [12, 19, 3, 5, 2, 3, 10], // Mock Data
+                borderColor: '#6366f1',
+                backgroundColor: gradient,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#6366f1',
+                pointRadius: 4
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#9ca3af' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#9ca3af' }
+                    }
+                }
+            }
+        };
+
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, config);
+    }
+
+    async function loadLogs() {
+        const listContainer = document.getElementById('recent-triggers-list');
+        const triggerCountEl = document.getElementById('stat-total-triggers');
+
+        try {
+            const res = await fetch('/api/v1/alerts/logs?limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) throw new Error('Failed to fetch logs');
+            const logs = await res.json();
+
+            // Update Total Stat
+            if (logs.length > 0 && triggerCountEl) {
+                triggerCountEl.textContent = logs.length;
+            }
+
+            listContainer.innerHTML = '';
+
+            if (logs.length === 0) {
+                listContainer.innerHTML = '<div class="text-gray-500 text-sm italic">No recent triggers found.</div>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const date = new Date(log.created_at);
+                const timeAgo = Math.floor((new Date() - date) / 60000); // mins
+                let timeStr = timeAgo + ' mins ago';
+                if (timeAgo > 60) timeStr = Math.floor(timeAgo / 60) + ' hours ago';
+                if (timeAgo > 1440) timeStr = Math.floor(timeAgo / 1440) + ' days ago';
+                if (timeAgo < 1) timeStr = 'Just now';
+
+                const el = document.createElement('div');
+                el.className = 'flex items-start space-x-3 text-sm';
+                el.innerHTML = `
+                    <div class="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <div>
+                        <p class="text-gray-300">Match found: <span class="text-white font-mono bg-gray-800 px-1 rounded">${log.detected_keyword}</span></p>
+                        <p class="text-xs text-gray-500" title="${date.toLocaleString()}">${timeStr}</p>
+                    </div>
+                `;
+                listContainer.appendChild(el);
+            });
+
+            updateChartData(logs);
+
+        } catch (err) {
+            console.error("Logs error:", err);
+            listContainer.innerHTML = '<div class="text-red-400 text-sm">Failed to load activity.</div>';
+        }
+    }
+
+    function updateChartData(logs) {
+        if (!myChart) return;
+
+        // Group by day (last 7 days)
+        const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }; // 0-6 day index
+
+        logs.forEach(log => {
+            const d = new Date(log.created_at);
+            const day = d.getDay();
+            counts[day]++;
+        });
+
+        const dataArr = [counts[1], counts[2], counts[3], counts[4], counts[5], counts[6], counts[0]]; // Mon-Sun
+
+        myChart.data.datasets[0].data = dataArr;
+        myChart.update();
+    }
+</script>
+{% endblock %}
