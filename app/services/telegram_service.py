@@ -56,9 +56,8 @@ class TelegramService:
         Fetch recent dialogs (chats) for the user.
         """
         client = TelegramClient(sessions.StringSession(session_string), self.api_id, self.api_hash)
-        await client.connect()
         
-        try:
+        async with client:
             if not await client.is_user_authorized():
                 raise ValueError("Session invalid or expired")
                 
@@ -72,7 +71,5 @@ class TelegramService:
                     "type": chat_type
                 })
             return results
-        finally:
-            await client.disconnect()
 
 telegram_service = TelegramService()
