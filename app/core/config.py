@@ -1,3 +1,4 @@
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings
 from typing import Optional, List
 
@@ -7,10 +8,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database (Neon/Postgres)
-    DATABASE_URL: str
+    DATABASE_URL: str = Field(validation_alias=AliasChoices("DATABASE_URL", "POSTGRES_URL"))
     
     # Security
-    SECRET_KEY: str
+    SECRET_KEY: str = Field(validation_alias=AliasChoices("SECRET_KEY", "SECRET"))
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
