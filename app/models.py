@@ -77,7 +77,7 @@ class AlertLog(SQLModel, table=True):
 
 class TelegramChat(SQLModel, table=True):
     __tablename__ = "telegram_chats"
-    id: int = Field(primary_key=True, sa_column=Column(BigInteger))
+    id: int = Field(sa_column=Column(BigInteger, primary_key=True))
     user_id: UUID = Field(foreign_key="users.id")
     title: str
     type: str # User, Group, Channel
