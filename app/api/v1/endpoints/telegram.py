@@ -103,7 +103,15 @@ async def get_telegram_dialogs(
         raise HTTPException(status_code=400, detail="No active Telegram session found. Please connect first.")
         
     try:
-        dialogs = await telegram_service.get_dialogs(session.session_string)
+        # Read from Cache (Synced by Worker)
+        from app.models import TelegramChat
+        stmt = select(TelegramChat).where(TelegramChat.user_id == current_user.id).order_by(desc(TelegramChat.created_at))
+        res = await db.execute(stmt)
+        dialogs = res.scalars().all()
+        
+        if not dialogs:
+           return []
+            
         return dialogs
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

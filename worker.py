@@ -358,6 +358,39 @@ async def init_bot_identity():
     except Exception as e:
         logger.error(f"Failed to fetch Bot Identity: {e}")
 
+async def sync_user_dialogs(client, user_id):
+    """Syncs the user's dialogs (chats) to the database."""
+    try:
+        from app.models import TelegramChat
+        dialogs = await client.get_dialogs(limit=50)
+        
+        async with AsyncSession(engine) as session:
+            # Clear existing? Or Upsert. Let's clear for simplicity as it's a sync.
+            # But clearing might flap the UI. Better to Upsert.
+            # Actually, deleting all for user is safest for "sync" to remove deleted chats.
+            stmt = select(TelegramChat).where(TelegramChat.user_id == user_id)
+            res = await session.execute(stmt)
+            existing = res.scalars().all()
+            for e in existing:
+                await session.delete(e)
+            
+            for d in dialogs:
+                chat_type = "Group" if d.is_group else "Channel" if d.is_channel else "User"
+                username = getattr(d.entity, 'username', None)
+                new_chat = TelegramChat(
+                    id=d.id,
+                    user_id=user_id,
+                    title=d.title or "Unknown",
+                    type=chat_type,
+                    username=username
+                )
+                session.add(new_chat)
+            await session.commit()
+            logger.info(f"Synced {len(dialogs)} dialogs for user {user_id}")
+            
+    except Exception as e:
+        logger.error(f"Failed to sync dialogs for {user_id}: {e}")
+
 async def start_user_client(session_data):
     """Start a Telethon client for a session."""
     user_id = str(session_data.user_id)
@@ -396,6 +429,9 @@ async def start_user_client(session_data):
 
         active_clients[user_id] = client
         logger.info(f"Client started for {user_id}")
+        
+        # Initial Sync
+        asyncio.create_task(sync_user_dialogs(client, user_id))
         
     except Exception as e:
         logger.error(f"Failed to start client for {user_id}: {e}")

@@ -74,3 +74,14 @@ class AlertLog(SQLModel, table=True):
     dispatched_to_email: bool = False
     dispatched_to_bot: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class TelegramChat(SQLModel, table=True):
+    __tablename__ = "telegram_chats"
+    id: int = Field(primary_key=True, sa_column=Column(BigInteger))
+    user_id: UUID = Field(foreign_key="users.id")
+    title: str
+    type: str # User, Group, Channel
+    username: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    user: User = Relationship()
