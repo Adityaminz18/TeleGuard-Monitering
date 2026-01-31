@@ -596,6 +596,12 @@
             initChart();
             loadLogs();
 
+            // Real-time Updates (Poll every 5 seconds)
+            setInterval(() => {
+                loadAlerts(); // To update status/count
+                loadLogs();   // To update feed and chart
+            }, 5000);
+
             // ADMIN LOGIC
             if (user.role === 'admin') {
                 // Show Admin Nav
