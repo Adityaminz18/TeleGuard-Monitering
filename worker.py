@@ -434,6 +434,23 @@ async def start_user_client(session_data):
         asyncio.create_task(sync_user_dialogs(client, user_id))
         
     except Exception as e:
+        error_str = str(e)
+        if "used under two different IP addresses" in error_str or "AuthKeyDuplicatedError" in error_str:
+             logger.error(f"Session REVOKED for {user_id}: {e}")
+             # Invalidate in DB
+             async with AsyncSession(engine) as session:
+                stmt = select(TelegramSession).where(TelegramSession.user_id == session_data.user_id).where(TelegramSession.is_active == True)
+                res = await session.execute(stmt)
+                db_session = res.scalars().first()
+                if db_session:
+                    db_session.is_active = False
+                    session.add(db_session)
+                    await session.commit()
+             # Remove from active clients if present
+             if user_id in active_clients:
+                 del active_clients[user_id]
+             return
+
         logger.error(f"Failed to start client for {user_id}: {e}")
         if user_id in active_clients:
              del active_clients[user_id]
