@@ -37,18 +37,28 @@ This project consists of two components that must be deployed separately for a p
 
 Since Vercel functions time out after 10-60 seconds, they kill the Telegram client connection. You need a server that runs 24/7.
 
-### Option A: Railway (Recommended)
+### Option A: Railway (Easiest & Recommended)
 
-1.  Create a new project on [Railway](https://railway.app/).
-2.  Connect your GitHub repository.
-3.  **Configure Service**:
-    *   Railway will likely auto-detect the `Procfile`.
-    *   By default, it might try to run the web server. You want it to run the **Worker**.
-    *   Go to **Settings** > **Build/Start Command**.
-    *   Set Start Command to: `python worker.py`
-4.  **Environment Variables**:
-    *   Copy the same `.env` variables to Railway.
-5.  **Deploy**.
+You can run **both** the API and Worker on Railway, or just the Worker.
+
+#### Scenario 1: Deploy Everything on Railway (Easiest)
+1.  **Sign Up/Login**: Go to [Railway.app](https://railway.app/).
+2.  **New Project**: Click "New Project" -> "Deploy from GitHub repo" -> Select `TeleGuard-Monitering`.
+3.  **Variables**: Add your variables in the "Variables" tab.
+4.  **Services**:
+    *   Railway will likely detect the `Procfile` and create **two services** (or one service with two processes).
+    *   If created as one service, go to "Settings" -> "Service Name" -> Check "Deploy" for both `web` and `worker`.
+    *   OR, simply deploy the repo **twice**:
+        *   **Service 1 (Web)**: Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT` (Auto-detected).
+        *   **Service 2 (Worker)**: Add a new service -> GitHub Repo -> Same Repo. Go to Settings -> **Start Command**: `python worker.py`.
+
+#### Scenario 2: Worker Only (If using Vercel for Web)
+1.  Check `DEPLOY.md` "Part 1" for Vercel setup.
+2.  On Railway, create a new project -> GitHub Repo.
+3.  Go to **Settings** -> **Build & Deploy**.
+4.  **Start Command**: Set explicitly to: `python worker.py`
+5.  Add Environment Variables (same as Vercel).
+6.  Deploy.
 
 ### Option B: VPS (Ubuntu/DigitalOcean)
 

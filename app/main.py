@@ -60,7 +60,14 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # Mount Static Files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+import os
+
+# Mount Static Files
+static_dir = "app/static"
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir)
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Templates
 templates = Jinja2Templates(directory="app/templates")
