@@ -566,6 +566,7 @@ async def setup_bot_commands(bot):
             )
             session.add(new_alert)
             await session.commit()
+            await session.refresh(new_alert)
             
             # Formatting response
             target_display = source_name
