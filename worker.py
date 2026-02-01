@@ -629,11 +629,13 @@ async def setup_bot_commands(bot):
                     break
             
             if target:
+                # Capture data before deletion
+                kws_display = str(target.keywords)
                 await session.delete(target)
                 await session.commit()
-                await event.respond(f"🗑 Alert <code>{target.keywords}</code> deleted.")
+                await event.respond(f"🗑 Alert <code>{kws_display}</code> deleted.", parse_mode='html')
             else:
-                await event.respond("❌ Alert not found.")
+                await event.respond(f"❌ Alert ID <code>{alert_id_fragment}</code> not found.", parse_mode='html')
 
 
 async def main():
