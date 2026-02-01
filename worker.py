@@ -631,6 +631,15 @@ async def setup_bot_commands(bot):
             if target:
                 # Capture data before deletion
                 kws_display = str(target.keywords)
+                
+                # Delete associated logs (Manual Cascade)
+                from app.models import AlertLog
+                log_stmt = select(AlertLog).where(AlertLog.alert_id == target.id)
+                log_res = await session.execute(log_stmt)
+                logs = log_res.scalars().all()
+                for log in logs:
+                    await session.delete(log)
+                
                 await session.delete(target)
                 await session.commit()
                 await event.respond(f"🗑 Alert <code>{kws_display}</code> deleted.", parse_mode='html')
