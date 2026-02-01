@@ -600,7 +600,7 @@ async def setup_bot_commands(bot):
             msg = "<b>📋 Active Listeners:</b>\n\n"
             for a in alerts:
                 kws = ", ".join(a.keywords)
-                msg += f"• {kws} <code>{str(a.id)[:8]}</code>\n"
+                msg += f"• {kws} (ID: <code>{str(a.id)[:8]}</code>)\n"
             
             await event.respond(msg, parse_mode='html')
 
