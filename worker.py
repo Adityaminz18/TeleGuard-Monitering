@@ -498,9 +498,25 @@ async def setup_bot_commands(bot):
     @bot.on(events.NewMessage(pattern='/add (.+)'))
     async def add_handler(event):
         raw_args = event.pattern_match.group(1).strip().split()
-        keyword = raw_args[0]
-        target_username = raw_args[1] if len(raw_args) > 1 else None
         
+        # 1. Parse Flags
+        flags = {t.lower() for t in raw_args if t.startswith('-')}
+        # 2. Parse Positional Args (Keyword, Username)
+        clean_args = [t for t in raw_args if not t.startswith('-')]
+        
+        if not clean_args:
+             await event.respond("❌ Please provide a keyword.\nUsage: <code>/add &lt;word&gt; [@user] [-email] [-bot]</code>", parse_mode='html')
+             return
+
+        keyword = clean_args[0]
+        target_username = clean_args[1] if len(clean_args) > 1 else None
+        
+        # 3. Determine Notifications
+        # If specific flags are used, valid only them. Otherwise default to BOTH.
+        has_flags = ('-email' in flags or '-bot' in flags)
+        notify_email = '-email' in flags if has_flags else True
+        notify_bot = '-bot' in flags if has_flags else True
+
         sender_id = event.sender_id
         
         async with AsyncSession(engine) as session:
@@ -520,9 +536,7 @@ async def setup_bot_commands(bot):
             if target_username:
                 target_username = target_username.lstrip('@')
                 from app.models import TelegramChat
-                # Case insensitive search on username
-                # Since SQLModel/SQLAlchemy usage varies, let's just fetch all user's chats and find in python or use ilike
-                # For safety, let's filter by user_id first
+                # Case insensitive search
                 stmt = select(TelegramChat).where(TelegramChat.user_id == tg_session.user_id)
                 res = await session.execute(stmt)
                 chats = res.scalars().all()
@@ -547,15 +561,20 @@ async def setup_bot_commands(bot):
                 keywords=[keyword],
                 source_id=source_id,
                 source_name=source_name,
-                notify_bot=True,
-                notify_email=True
+                notify_bot=notify_bot,
+                notify_email=notify_email
             )
             session.add(new_alert)
             await session.commit()
             
             # Formatting response
             target_display = source_name
-            await event.respond(f"✅ <b>Alert Added!</b>\n\n🔑 Keyword: <code>{keyword}</code>\n🎯 Source: <code>{target_display}</code>\n🆔 ID: <code>{new_alert.id}</code>", parse_mode='html')
+            chans = []
+            if notify_bot: chans.append("Bot 🤖")
+            if notify_email: chans.append("Email 📧")
+            chan_str = " + ".join(chans)
+            
+            await event.respond(f"✅ <b>Alert Added!</b>\n\n🔑 Keyword: <code>{keyword}</code>\n🎯 Source: <code>{target_display}</code>\n📢 Notify: <b>{chan_str}</b>\n🆔 ID: <code>{new_alert.id}</code>", parse_mode='html')
 
     @bot.on(events.NewMessage(pattern='/list'))
     async def list_handler(event):
