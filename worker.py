@@ -497,7 +497,10 @@ async def setup_bot_commands(bot):
 
     @bot.on(events.NewMessage(pattern='/add (.+)'))
     async def add_handler(event):
-        keyword = event.pattern_match.group(1).strip()
+        raw_args = event.pattern_match.group(1).strip().split()
+        keyword = raw_args[0]
+        target_username = raw_args[1] if len(raw_args) > 1 else None
+        
         sender_id = event.sender_id
         
         async with AsyncSession(engine) as session:
@@ -510,19 +513,49 @@ async def setup_bot_commands(bot):
                  await event.respond("❌ You are not linked. Please login to dashboard.")
                  return
 
+            # Resolve Target (if provided)
+            source_id = None
+            source_name = "All Chats"
+            
+            if target_username:
+                target_username = target_username.lstrip('@')
+                from app.models import TelegramChat
+                # Case insensitive search on username
+                # Since SQLModel/SQLAlchemy usage varies, let's just fetch all user's chats and find in python or use ilike
+                # For safety, let's filter by user_id first
+                stmt = select(TelegramChat).where(TelegramChat.user_id == tg_session.user_id)
+                res = await session.execute(stmt)
+                chats = res.scalars().all()
+                
+                found_chat = None
+                for c in chats:
+                    if c.username and c.username.lower() == target_username.lower():
+                        found_chat = c
+                        break
+                
+                if found_chat:
+                    source_id = found_chat.id
+                    source_name = f"@{found_chat.username}"
+                else:
+                    await event.respond(f"❌ Could not find chat <b>@{target_username}</b> in your synced dialogs.\n\nPlease ensure you have chatted with them recently and the dashboard is synced.", parse_mode='html')
+                    return
+
             # Create Alert
             from app.models import Alert
             new_alert = Alert(
                 user_id=tg_session.user_id,
                 keywords=[keyword],
-                source_name="All Chats",
-                notify_bot=True, # Default to Bot notification since they are using bot
+                source_id=source_id,
+                source_name=source_name,
+                notify_bot=True,
                 notify_email=True
             )
             session.add(new_alert)
             await session.commit()
             
-            await event.respond(f"✅ <b>Alert Added!</b>\n\nMonitoring for: <code>{keyword}</code>\nID: <code>{new_alert.id}</code>", parse_mode='html')
+            # Formatting response
+            target_display = source_name
+            await event.respond(f"✅ <b>Alert Added!</b>\n\n🔑 Keyword: <code>{keyword}</code>\n🎯 Source: <code>{target_display}</code>\n🆔 ID: <code>{new_alert.id}</code>", parse_mode='html')
 
     @bot.on(events.NewMessage(pattern='/list'))
     async def list_handler(event):
