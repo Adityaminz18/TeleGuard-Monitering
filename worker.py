@@ -452,14 +452,142 @@ async def start_user_client(session_data):
              return
 
         logger.error(f"Failed to start client for {user_id}: {e}")
-        if user_id in active_clients:
-             del active_clients[user_id]
+async def setup_bot_commands(bot):
+    """
+    Registers command handlers for the Bot.
+    """
+    logger.info("Setting up Bot Commands...")
+
+    @bot.on(events.NewMessage(pattern='/start'))
+    async def start_handler(event):
+        sender_id = event.sender_id
+        async with AsyncSession(engine) as session:
+            # Try to associate
+            # 1. Check TelegramSession (Best for finding linked Account)
+            stmt = select(TelegramSession).where(TelegramSession.telegram_id == str(sender_id))
+            res = await session.execute(stmt)
+            tg_session = res.scalars().first()
+            
+            user = None
+            if tg_session:
+                 from app.models import User
+                 user = await session.get(User, tg_session.user_id)
+            
+            # 2. If not found, check User.bot_chat_id
+            if not user:
+                from app.models import User
+                stmt = select(User).where(User.bot_chat_id == sender_id)
+                res = await session.execute(stmt)
+                user = res.scalars().first()
+            
+            if user:
+                 # Ensure bot_chat_id is set
+                 if not user.bot_chat_id or user.bot_chat_id != sender_id:
+                     user.bot_chat_id = sender_id
+                     session.add(user)
+                     await session.commit()
+                 
+                 await event.respond(f"👋 Welcome back, {user.full_name or 'User'}!\n\nYour account is linked. You can managing alerts here.\n\n/list - View Alerts\n/add <word> - Add new listener\n/del <id> - Delete listener")
+            else:
+                 await event.respond("👋 Welcome to TeleGuard!\n\nI couldn't find your account. Please Login to the Dashboard first and duplicate your Telegram connection, or ensures your IDs match.")
+
+    @bot.on(events.NewMessage(pattern='/add (.+)'))
+    async def add_handler(event):
+        keyword = event.pattern_match.group(1).strip()
+        sender_id = event.sender_id
+        
+        async with AsyncSession(engine) as session:
+            # Auth
+            stmt = select(TelegramSession).where(TelegramSession.telegram_id == str(sender_id))
+            res = await session.execute(stmt)
+            tg_session = res.scalars().first()
+            
+            if not tg_session: 
+                 await event.respond("❌ You are not linked. Please login to dashboard.")
+                 return
+
+            # Create Alert
+            from app.models import Alert
+            new_alert = Alert(
+                user_id=tg_session.user_id,
+                keywords=[keyword],
+                source_name="All Chats",
+                notify_bot=True, # Default to Bot notification since they are using bot
+                notify_email=True
+            )
+            session.add(new_alert)
+            await session.commit()
+            
+            await event.respond(f"✅ <b>Alert Added!</b>\n\nMonitoring for: <code>{keyword}</code>\nID: <code>{new_alert.id}</code>", parse_mode='html')
+
+    @bot.on(events.NewMessage(pattern='/list'))
+    async def list_handler(event):
+        sender_id = event.sender_id
+        async with AsyncSession(engine) as session:
+            stmt = select(TelegramSession).where(TelegramSession.telegram_id == str(sender_id))
+            res = await session.execute(stmt)
+            tg_session = res.scalars().first()
+            
+            if not tg_session: 
+                 await event.respond("❌ Auth failed.")
+                 return
+            
+            from app.models import Alert
+            stmt = select(Alert).where(Alert.user_id == tg_session.user_id).where(Alert.is_paused == False)
+            res = await session.execute(stmt)
+            alerts = res.scalars().all()
+            
+            if not alerts:
+                await event.respond("📭 No active alerts. Use /add <keyword> to create one.")
+                return
+            
+            msg = "<b>📋 Active Listeners:</b>\n\n"
+            for a in alerts:
+                kws = ", ".join(a.keywords)
+                msg += f"• <code>{kws}</code> (ID: <code>{str(a.id)[:8]}</code>)\n"
+            
+            await event.respond(msg, parse_mode='html')
+
+    @bot.on(events.NewMessage(pattern='/del (.+)'))
+    async def del_handler(event):
+        alert_id_fragment = event.pattern_match.group(1).strip()
+        sender_id = event.sender_id
+        
+        async with AsyncSession(engine) as session:
+            stmt = select(TelegramSession).where(TelegramSession.telegram_id == str(sender_id))
+            res = await session.execute(stmt)
+            tg_session = res.scalars().first()
+            
+            if not tg_session: return
+
+            from app.models import Alert
+            stmt = select(Alert).where(Alert.user_id == tg_session.user_id)
+            res = await session.execute(stmt)
+            alerts = res.scalars().all()
+            
+            target = None
+            for a in alerts:
+                if str(a.id).startswith(alert_id_fragment):
+                    target = a
+                    break
+            
+            if target:
+                await session.delete(target)
+                await session.commit()
+                await event.respond(f"🗑 Alert <code>{target.keywords}</code> deleted.")
+            else:
+                await event.respond("❌ Alert not found.")
+
 
 async def main():
     logger.info("Worker started. monitoring sessions...")
     
     # 1. Initialize Bot Identity for filtering
     await init_bot_identity()
+
+    # 1.5 Setup Bot Commands
+    if bot_client:
+        await setup_bot_commands(bot_client)
 
     while True:
         sessions = await fetch_active_sessions()
