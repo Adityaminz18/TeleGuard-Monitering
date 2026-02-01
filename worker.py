@@ -491,9 +491,9 @@ async def setup_bot_commands(bot):
                      session.add(user)
                      await session.commit()
                  
-                 await event.respond(f"👋 Welcome back, {user.full_name or 'User'}!\n\nYour account is linked. You can managing alerts here.\n\n/list - View Alerts\n/add <word> - Add new listener\n/del <id> - Delete listener")
+                 await event.respond(f"👋 Welcome back, {user.full_name or 'User'}!\n\nYour account is linked. You can manage alerts here.\n\n<b>Commands:</b>\n/list - View active alerts\n/add &lt;word&gt; [@user] - Add listener\n<i>(e.g. /add bitcoin @elonmusk)</i>\n/del &lt;id&gt; - Delete listener", parse_mode='html')
             else:
-                 await event.respond("👋 Welcome to TeleGuard!\n\nI couldn't find your account. Please Login to the Dashboard first and duplicate your Telegram connection, or ensures your IDs match.")
+                 await event.respond("👋 Welcome to TeleGuard!\n\nI couldn't find your account. Please Login to the Dashboard first and duplicate your Telegram connection, or ensure your IDs match.")
 
     @bot.on(events.NewMessage(pattern='/add (.+)'))
     async def add_handler(event):
