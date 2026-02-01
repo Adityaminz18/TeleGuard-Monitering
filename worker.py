@@ -458,6 +458,10 @@ async def setup_bot_commands(bot):
     """
     logger.info("Setting up Bot Commands...")
 
+    @bot.on(events.NewMessage)
+    async def debug_handler(event):
+        logger.info(f"BOT DEBUG: Received msg from {event.sender_id}: {event.text}")
+
     @bot.on(events.NewMessage(pattern='/start'))
     async def start_handler(event):
         sender_id = event.sender_id
