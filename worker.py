@@ -633,12 +633,10 @@ async def setup_bot_commands(bot):
                 kws_display = str(target.keywords)
                 
                 # Delete associated logs (Manual Cascade)
+                # Delete associated logs (Manual Cascade)
                 from app.models import AlertLog
-                log_stmt = select(AlertLog).where(AlertLog.alert_id == target.id)
-                log_res = await session.execute(log_stmt)
-                logs = log_res.scalars().all()
-                for log in logs:
-                    await session.delete(log)
+                from sqlmodel import delete
+                await session.execute(delete(AlertLog).where(AlertLog.alert_id == target.id))
                 
                 await session.delete(target)
                 await session.commit()
