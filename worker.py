@@ -155,7 +155,91 @@ async def notification_handler(event, user_id: str):
     except Exception as e:
         logger.error(f"Error in handler for {user_id}: {e}")
 
-# ... (Helper functions remain unchanged) ...
+
+def generate_email_html(keyword_str: str, from_user: str, message_text: str) -> str:
+    return f"""
+    <html>
+        <body>
+            <h2>🚨 TeleGuard Alert Triggered</h2>
+            <p><strong>Trigger Keyword:</strong> {keyword_str}</p>
+            <p><strong>Sender:</strong> {from_user}</p>
+            <hr>
+            <h3>Message Content:</h3>
+            <blockquote style="background: #f9f9f9; border-left: 10px solid #ccc; margin: 1.5em 10px; padding: 0.5em 10px;">
+                {message_text}
+            </blockquote>
+            <hr>
+            <p><small>Sent by TeleGuard Monitoring System</small></p>
+        </body>
+    </html>
+    """
+
+def generate_bot_message(keyword_str: str, from_user: str, message_text: str, alert_id: str) -> str:
+    return (
+        f"🚨 <b>TeleGuard Alert</b>\n\n"
+        f"🔑 <b>Trigger:</b> <code>{keyword_str}</code>\n"
+        f"👤 <b>Sender:</b> {from_user}\n"
+        f"🆔 <b>ID:</b> <code>{alert_id}</code>\n\n"
+        f"📝 <b>Message:</b>\n{message_text[:4000]}" 
+    )
+
+def _send_smtp_blocking(msg, server_host, server_port, user, password):
+    context = ssl.create_default_context()
+    try:
+        # Check for SSL port (465)
+        if server_port == 465:
+            with smtplib.SMTP_SSL(server_host, server_port, context=context) as server:
+                server.login(user, password)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(server_host, server_port) as server:
+                server.starttls(context=context)
+                server.login(user, password)
+                server.send_message(msg)
+    except Exception as e:
+        logger.error(f"SMTP Error: {e}")
+        raise e
+
+async def send_email_notification(to_email: str, subject: str, text_body: str, html_content: str = None) -> bool:
+    if not settings.SMTP_SERVER or not settings.SMTP_USER:
+        return False
+        
+    try:
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = settings.EMAILS_FROM_EMAIL or settings.SMTP_USER
+        msg["To"] = to_email
+        msg.set_content(text_body)
+        
+        if html_content:
+            msg.add_alternative(html_content, subtype="html")
+        
+        # Run blocking SMTP in thread
+        await asyncio.to_thread(
+            _send_smtp_blocking, 
+            msg, 
+            settings.SMTP_SERVER, 
+            settings.SMTP_PORT, 
+            settings.SMTP_USER, 
+            settings.SMTP_PASSWORD
+        )
+             
+        logger.info(f"Email sent to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
+
+async def send_bot_notification(chat_id: int, message_text: str) -> bool:
+    try:
+        bot = await get_bot_client()
+        if not bot:
+            return False
+        await bot.send_message(chat_id, message_text, parse_mode='html')
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send bot message to {chat_id}: {e}")
+        return False
 
 async def dispatch_notification(alert, message_text, from_user, matched_trigger="match"):
     # ... (Implementation similar to original but passing matched_trigger) ...
